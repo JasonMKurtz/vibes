@@ -2,6 +2,7 @@ package irc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -29,6 +30,7 @@ type Server struct {
 	mu       sync.Mutex
 	clients  map[net.Conn]*Client
 	channels map[string]map[*Client]bool
+	ready    chan struct{}
 }
 
 // NewServer creates a new IRC server.
@@ -37,18 +39,24 @@ func NewServer(addr string) *Server {
 		Addr:     addr,
 		clients:  make(map[net.Conn]*Client),
 		channels: make(map[string]map[*Client]bool),
+		ready:    make(chan struct{}),
 	}
 }
 
-// Run starts accepting connections. If ready is non-nil it will receive a
-// signal once the listener is setup and the server address updated.
-func (s *Server) Run(ready chan<- struct{}) error {
+// Ready returns a channel that is closed once the server is ready to accept
+// connections.
+func (s *Server) Ready() <-chan struct{} {
+	return s.ready
+}
+
+func (s *Server) Run() error {
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		return err
 	}
 	s.ln = ln
 	s.Addr = ln.Addr().String()
+	close(s.ready)
 	Logger.Printf("IRC server listening on %s", s.Addr)
 	fmt.Printf("IRC server started on %s\n", s.Addr)
 	if ready != nil {
@@ -58,7 +66,7 @@ func (s *Server) Run(ready chan<- struct{}) error {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			if strings.Contains(err.Error(), "closed") {
+			if errors.Is(err, net.ErrClosed) {
 				return nil
 			}
 			ErrorLogger.Println("accept error:", err)
@@ -92,6 +100,9 @@ func (s *Server) handleConn(conn net.Conn) {
 	for reader.Scan() {
 		line := reader.Text()
 		s.handleLine(client, line)
+	}
+	if err := reader.Err(); err != nil {
+		ErrorLogger.Println("read error:", err)
 	}
 }
 
@@ -170,18 +181,33 @@ func (s *Server) handlePrivMsg(c *Client, msg string) {
 		s.broadcast(ch, fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body))
 	} else {
 		s.mu.Lock()
-		for client := range s.clients {
-			if s.clients[client].Nickname == target {
-				client.Write([]byte(fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body)))
+		var recipient *Client
+		for _, client := range s.clients {
+			if client.Nickname == target {
+				recipient = client
 				break
 			}
 		}
 		s.mu.Unlock()
+		if recipient != nil {
+			s.broadcast(map[*Client]bool{recipient: true}, fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body))
+		}
 	}
 }
 
 func (s *Server) broadcast(clients map[*Client]bool, msg string) {
+	if clients == nil {
+		return
+	}
+
+	s.mu.Lock()
+	recips := make([]*Client, 0, len(clients))
 	for c := range clients {
+		recips = append(recips, c)
+	}
+	s.mu.Unlock()
+
+	for _, c := range recips {
 		c.Conn.Write([]byte(msg))
 	}
 }

@@ -21,8 +21,8 @@ func main() {
 		}
 	}()
 
-	// Wait for the server to start
-	<-ready
+	// Wait for the server to be ready
+	<-srv.Ready()
 
 	cli, err := client.Connect("localhost:6667")
 	if err != nil {

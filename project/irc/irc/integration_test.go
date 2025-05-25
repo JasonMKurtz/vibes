@@ -1,6 +1,8 @@
 package irc
 
 import (
+	"errors"
+	"net"
 	"strings"
 	"testing"
 
@@ -9,10 +11,13 @@ import (
 
 func TestClientFlow(t *testing.T) {
 	s := NewServer(":0")
-	ready := make(chan struct{})
-	go s.Run(ready)
+	go func() {
+		if err := s.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
+			t.Fatalf("server error: %v", err)
+		}
+	}()
+	<-s.Ready()
 	defer s.Close()
-	<-ready
 
 	c1, err := ic.Connect(s.Addr)
 	if err != nil {
