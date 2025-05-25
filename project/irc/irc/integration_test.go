@@ -3,16 +3,16 @@ package irc
 import (
 	"strings"
 	"testing"
-	"time"
 
 	ic "vibes/client"
 )
 
 func TestClientFlow(t *testing.T) {
 	s := NewServer(":0")
-	go s.Run()
+	ready := make(chan struct{})
+	go s.Run(ready)
 	defer s.Close()
-	time.Sleep(100 * time.Millisecond)
+	<-ready
 
 	c1, err := ic.Connect(s.Addr)
 	if err != nil {

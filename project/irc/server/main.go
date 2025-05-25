@@ -18,7 +18,7 @@ func main() {
 
 	addr := ":6667"
 	s := irc.NewServer(addr)
-	if err := s.Run(); err != nil {
+	if err := s.Run(nil); err != nil {
 		irc.ErrorLogger.Fatal(err)
 	}
 }

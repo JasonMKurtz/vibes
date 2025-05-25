@@ -40,7 +40,9 @@ func NewServer(addr string) *Server {
 	}
 }
 
-func (s *Server) Run() error {
+// Run starts accepting connections. If ready is non-nil it will receive a
+// signal once the listener is setup and the server address updated.
+func (s *Server) Run(ready chan<- struct{}) error {
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		return err
@@ -49,6 +51,10 @@ func (s *Server) Run() error {
 	s.Addr = ln.Addr().String()
 	Logger.Printf("IRC server listening on %s", s.Addr)
 	fmt.Printf("IRC server started on %s\n", s.Addr)
+	if ready != nil {
+		// notify callers that the server is ready to accept connections
+		ready <- struct{}{}
+	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
