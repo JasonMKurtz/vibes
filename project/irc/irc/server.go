@@ -87,6 +87,9 @@ func (s *Server) handleConn(conn net.Conn) {
 		line := reader.Text()
 		s.handleLine(client, line)
 	}
+	if err := reader.Err(); err != nil {
+		ErrorLogger.Println("read error:", err)
+	}
 }
 
 func (s *Server) handleLine(c *Client, line string) {
