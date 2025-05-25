@@ -48,3 +48,23 @@ You can exercise the server manually using `telnet` or `nc`:
 
 The server will write connection and channel activity to `server.log` while
 errors continue to appear on stderr.
+
+## Client CLI
+
+This repository includes a small command line client built on top of the
+SDK. Run it from the project root:
+
+```
+go run ./project/irc/cli
+```
+
+Use the `-server` flag to specify the IRC server address if it differs from
+the default `localhost:6667`. The CLI accepts simple commands:
+
+- `login <name>` – set the nickname and username
+- `join <channel>` – join a channel
+- `msg <target> <message>` – send a message
+- `read` – read one line from the server
+- `quit` – exit the program
+
+Each command is typed interactively after starting the client.
