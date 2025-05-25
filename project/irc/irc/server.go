@@ -164,13 +164,17 @@ func (s *Server) handlePrivMsg(c *Client, msg string) {
 		s.broadcast(ch, fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body))
 	} else {
 		s.mu.Lock()
+		var targetConn net.Conn
 		for client := range s.clients {
 			if s.clients[client].Nickname == target {
-				client.Write([]byte(fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body)))
+				targetConn = client
 				break
 			}
 		}
 		s.mu.Unlock()
+		if targetConn != nil {
+			targetConn.Write([]byte(fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body)))
+		}
 	}
 }
 
