@@ -14,8 +14,9 @@ func main() {
 	irc.ErrorLogger = irc.Logger
 
 	srv := irc.NewServer(":6667")
+	ready := make(chan struct{})
 	go func() {
-		if err := srv.Run(); err != nil {
+		if err := srv.Run(ready); err != nil {
 			irc.ErrorLogger.Fatal(err)
 		}
 	}()

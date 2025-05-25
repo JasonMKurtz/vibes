@@ -59,6 +59,10 @@ func (s *Server) Run() error {
 	close(s.ready)
 	Logger.Printf("IRC server listening on %s", s.Addr)
 	fmt.Printf("IRC server started on %s\n", s.Addr)
+	if ready != nil {
+		// notify callers that the server is ready to accept connections
+		ready <- struct{}{}
+	}
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
