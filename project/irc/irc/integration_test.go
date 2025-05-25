@@ -58,4 +58,20 @@ func TestClientFlow(t *testing.T) {
 	if !received {
 		t.Fatal("privmsg not received")
 	}
+
+	c2.Part("#room")
+	partReceived := false
+	for i := 0; i < 5; i++ {
+		line, err := c1.ReadLine()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(line, "PART #room") {
+			partReceived = true
+			break
+		}
+	}
+	if !partReceived {
+		t.Fatal("part not received")
+	}
 }
