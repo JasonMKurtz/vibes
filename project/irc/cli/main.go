@@ -22,6 +22,61 @@ func main() {
 	defer c.Close()
 
 	fmt.Println("Connected to", *addr)
+
+	joined := make(map[string]bool)
+	nickname := ""
+
+	go func() {
+		for {
+			line, err := c.ReadLine()
+			if err != nil {
+				fmt.Println("error:", err)
+				return
+			}
+			line = strings.TrimSpace(line)
+			parts := strings.SplitN(line, " :", 2)
+			msg := ""
+			if len(parts) == 2 {
+				msg = parts[1]
+			}
+			fields := strings.Fields(parts[0])
+			if len(fields) < 2 {
+				continue
+			}
+			src := strings.TrimPrefix(fields[0], ":")
+			cmd := fields[1]
+			switch cmd {
+			case "JOIN":
+				if len(fields) >= 3 {
+					ch := fields[2]
+					if src == nickname {
+						joined[ch] = true
+					}
+					if joined[ch] {
+						fmt.Printf("%s joined %s\n", src, ch)
+					}
+				}
+			case "PART":
+				if len(fields) >= 3 {
+					ch := fields[2]
+					if joined[ch] {
+						fmt.Printf("%s left %s\n", src, ch)
+						if src == nickname {
+							delete(joined, ch)
+						}
+					}
+				}
+			case "PRIVMSG":
+				if len(fields) >= 3 {
+					target := fields[2]
+					if joined[target] {
+						fmt.Printf("[%s] %s: %s\n", target, src, msg)
+					}
+				}
+			}
+		}
+	}()
+
 	reader := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 	for reader.Scan() {
@@ -42,11 +97,19 @@ func main() {
 				fmt.Println("usage: login <name>")
 			} else if err := c.Login(arg); err != nil {
 				fmt.Println("error:", err)
+			} else {
+				nickname = arg
 			}
 		case "join":
 			if arg == "" {
 				fmt.Println("usage: join <channel>")
 			} else if err := c.Join(arg); err != nil {
+				fmt.Println("error:", err)
+			}
+		case "part":
+			if arg == "" {
+				fmt.Println("usage: part <channel>")
+			} else if err := c.Part(arg); err != nil {
 				fmt.Println("error:", err)
 			}
 		case "msg":

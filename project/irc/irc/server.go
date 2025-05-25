@@ -73,11 +73,9 @@ func (s *Server) handleConn(conn net.Conn) {
 		Logger.Printf("Client disconnected: %s", conn.RemoteAddr())
 		s.mu.Lock()
 		for ch := range client.Channels {
-			delete(s.channels[ch], client)
-			if len(s.channels[ch]) == 0 {
-				delete(s.channels, ch)
-			}
-			Logger.Printf("%s left %s", client.Nickname, ch)
+			s.mu.Unlock()
+			s.partChannel(client, ch)
+			s.mu.Lock()
 		}
 		delete(s.clients, conn)
 		s.mu.Unlock()
@@ -107,6 +105,8 @@ func (s *Server) handleLine(c *Client, line string) {
 		c.Conn.Write([]byte("PONG :" + arg + "\r\n"))
 	case "JOIN":
 		s.joinChannel(c, arg)
+	case "PART":
+		s.partChannel(c, arg)
 	case "PRIVMSG":
 		s.handlePrivMsg(c, arg)
 	case "QUIT":
@@ -129,6 +129,23 @@ func (s *Server) joinChannel(c *Client, name string) {
 	s.mu.Unlock()
 	Logger.Printf("%s joined %s", c.Nickname, name)
 	s.broadcast(ch, fmt.Sprintf(":%s JOIN %s\r\n", c.Nickname, name))
+}
+
+func (s *Server) partChannel(c *Client, name string) {
+	s.mu.Lock()
+	ch := s.channels[name]
+	if ch != nil {
+		delete(ch, c)
+		if len(ch) == 0 {
+			delete(s.channels, name)
+		}
+	}
+	delete(c.Channels, name)
+	s.mu.Unlock()
+	Logger.Printf("%s left %s", c.Nickname, name)
+	if ch != nil {
+		s.broadcast(ch, fmt.Sprintf(":%s PART %s\r\n", c.Nickname, name))
+	}
 }
 
 func (s *Server) handlePrivMsg(c *Client, msg string) {

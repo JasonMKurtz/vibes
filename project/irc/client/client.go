@@ -37,6 +37,11 @@ func (c *Client) Join(channel string) error {
 	return c.sendf("JOIN %s", channel)
 }
 
+// Part parts the given channel.
+func (c *Client) Part(channel string) error {
+	return c.sendf("PART %s", channel)
+}
+
 // Msg sends a PRIVMSG to the target.
 func (c *Client) Msg(target, message string) error {
 	return c.sendf("PRIVMSG %s :%s", target, message)
