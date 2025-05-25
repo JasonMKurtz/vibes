@@ -21,14 +21,12 @@ func Connect(addr string) (*Client, error) {
 	return &Client{conn: conn, r: bufio.NewReader(conn)}, nil
 }
 
-// Nick sends the NICK command.
-func (c *Client) Nick(name string) error {
-	return c.sendf("NICK %s", name)
-}
-
-// User sends the USER command.
-func (c *Client) User(user string) error {
-	return c.sendf("USER %s", user)
+// Login sets both the nickname and username for the connection.
+func (c *Client) Login(name string) error {
+	if err := c.sendf("NICK %s", name); err != nil {
+		return err
+	}
+	return c.sendf("USER %s", name)
 }
 
 // Join joins the given channel.
