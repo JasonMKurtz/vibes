@@ -1,18 +1,23 @@
 package irc
 
 import (
+	"errors"
+	"net"
 	"strings"
 	"testing"
-	"time"
 
 	ic "vibes/client"
 )
 
 func TestClientFlow(t *testing.T) {
 	s := NewServer(":0")
-	go s.Run()
+	go func() {
+		if err := s.Run(); err != nil && !errors.Is(err, net.ErrClosed) {
+			t.Fatalf("server error: %v", err)
+		}
+	}()
+	<-s.Ready()
 	defer s.Close()
-	time.Sleep(100 * time.Millisecond)
 
 	c1, err := ic.Connect(s.Addr)
 	if err != nil {
