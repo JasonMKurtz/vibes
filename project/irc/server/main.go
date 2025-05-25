@@ -3,10 +3,17 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"sync"
+)
+
+var (
+	logger      *log.Logger
+	errorLogger *log.Logger
 )
 
 // Client represents a connected IRC client.
@@ -39,13 +46,14 @@ func (s *Server) run() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("IRC server listening on %s", s.addr)
+	logger.Printf("IRC server listening on %s", s.addr)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			log.Println("accept error:", err)
+			errorLogger.Println("accept error:", err)
 			continue
 		}
+		logger.Printf("Client connected: %s", conn.RemoteAddr())
 		go s.handleConn(conn)
 	}
 }
@@ -57,7 +65,15 @@ func (s *Server) handleConn(conn net.Conn) {
 	s.mu.Unlock()
 
 	defer func() {
+		logger.Printf("Client disconnected: %s", conn.RemoteAddr())
 		s.mu.Lock()
+		for ch := range client.channels {
+			delete(s.channels[ch], client)
+			if len(s.channels[ch]) == 0 {
+				delete(s.channels, ch)
+			}
+			logger.Printf("%s left %s", client.nickname, ch)
+		}
 		delete(s.clients, conn)
 		s.mu.Unlock()
 		conn.Close()
@@ -103,6 +119,7 @@ func (s *Server) joinChannel(c *Client, name string) {
 	ch[c] = true
 	c.channels[name] = true
 	s.mu.Unlock()
+	logger.Printf("%s joined %s", c.nickname, name)
 	s.broadcast(ch, fmt.Sprintf(":%s JOIN %s\r\n", c.nickname, name))
 }
 
@@ -149,9 +166,16 @@ func (s *Server) broadcast(clients map[*Client]bool, msg string) {
 }
 
 func main() {
+	logFile, err := os.OpenFile("server.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		log.Fatalf("failed to open log file: %v", err)
+	}
+	logger = log.New(logFile, "", log.LstdFlags)
+	errorLogger = log.New(io.MultiWriter(logFile, os.Stderr), "ERROR: ", log.LstdFlags)
+
 	addr := ":6667"
 	s := NewServer(addr)
 	if err := s.run(); err != nil {
-		log.Fatal(err)
+		errorLogger.Fatal(err)
 	}
 }
