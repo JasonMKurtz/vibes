@@ -26,14 +26,12 @@ func TestClientFlow(t *testing.T) {
 	}
 	defer c2.Close()
 
-	if err := c1.Nick("alice"); err != nil {
+	if err := c1.Login("alice"); err != nil {
 		t.Fatal(err)
 	}
-	c1.User("alice")
-	if err := c2.Nick("bob"); err != nil {
+	if err := c2.Login("bob"); err != nil {
 		t.Fatal(err)
 	}
-	c2.User("bob")
 
 	c1.Join("#room")
 	c2.Join("#room")

@@ -21,14 +21,15 @@ func Connect(addr string) (*Client, error) {
 	return &Client{conn: conn, r: bufio.NewReader(conn)}, nil
 }
 
-// Nick sends the NICK command.
-func (c *Client) Nick(name string) error {
-	return c.sendf("NICK %s", name)
-}
-
-// User sends the USER command.
-func (c *Client) User(user string) error {
-	return c.sendf("USER %s", user)
+// Login sends the NICK and USER commands using the same value.
+// IRC servers typically require both commands during connection
+// setup but in this client the values are always identical.  Login
+// combines the two so callers don't have to issue them separately.
+func (c *Client) Login(name string) error {
+	if err := c.sendf("NICK %s", name); err != nil {
+		return err
+	}
+	return c.sendf("USER %s", name)
 }
 
 // Join joins the given channel.
