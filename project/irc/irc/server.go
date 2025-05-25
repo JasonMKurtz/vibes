@@ -2,6 +2,7 @@ package irc
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -52,7 +53,7 @@ func (s *Server) Run() error {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
-			if strings.Contains(err.Error(), "closed") {
+			if errors.Is(err, net.ErrClosed) {
 				return nil
 			}
 			ErrorLogger.Println("accept error:", err)
