@@ -164,18 +164,33 @@ func (s *Server) handlePrivMsg(c *Client, msg string) {
 		s.broadcast(ch, fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body))
 	} else {
 		s.mu.Lock()
-		for client := range s.clients {
-			if s.clients[client].Nickname == target {
-				client.Write([]byte(fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body)))
+		var recipient *Client
+		for _, client := range s.clients {
+			if client.Nickname == target {
+				recipient = client
 				break
 			}
 		}
 		s.mu.Unlock()
+		if recipient != nil {
+			s.broadcast(map[*Client]bool{recipient: true}, fmt.Sprintf(":%s PRIVMSG %s :%s\r\n", c.Nickname, target, body))
+		}
 	}
 }
 
 func (s *Server) broadcast(clients map[*Client]bool, msg string) {
+	if clients == nil {
+		return
+	}
+
+	s.mu.Lock()
+	recips := make([]*Client, 0, len(clients))
 	for c := range clients {
+		recips = append(recips, c)
+	}
+	s.mu.Unlock()
+
+	for _, c := range recips {
 		c.Conn.Write([]byte(msg))
 	}
 }
