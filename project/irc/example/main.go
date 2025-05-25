@@ -29,8 +29,7 @@ func main() {
 	}
 	defer cli.Close()
 
-	cli.Nick("tester")
-	cli.User("tester")
+	cli.Login("tester")
 	cli.Join("#chat")
 	cli.Msg("#chat", "hello world")
 
