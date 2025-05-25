@@ -48,6 +48,7 @@ func (s *Server) Run() error {
 	s.ln = ln
 	s.Addr = ln.Addr().String()
 	Logger.Printf("IRC server listening on %s", s.Addr)
+	fmt.Printf("IRC server started on %s\n", s.Addr)
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
