@@ -29,6 +29,7 @@ type Server struct {
 	mu       sync.Mutex
 	clients  map[net.Conn]*Client
 	channels map[string]map[*Client]bool
+	ready    chan struct{}
 }
 
 // NewServer creates a new IRC server.
@@ -37,7 +38,14 @@ func NewServer(addr string) *Server {
 		Addr:     addr,
 		clients:  make(map[net.Conn]*Client),
 		channels: make(map[string]map[*Client]bool),
+		ready:    make(chan struct{}),
 	}
+}
+
+// Ready returns a channel that is closed once the server is ready to accept
+// connections.
+func (s *Server) Ready() <-chan struct{} {
+	return s.ready
 }
 
 func (s *Server) Run() error {
@@ -47,6 +55,7 @@ func (s *Server) Run() error {
 	}
 	s.ln = ln
 	s.Addr = ln.Addr().String()
+	close(s.ready)
 	Logger.Printf("IRC server listening on %s", s.Addr)
 	fmt.Printf("IRC server started on %s\n", s.Addr)
 	for {
