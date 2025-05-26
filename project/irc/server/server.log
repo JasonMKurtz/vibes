@@ -1,0 +1,24 @@
+2025/05/25 17:40:57 IRC server listening on [::]:6667
+2025/05/25 17:47:29 IRC server listening on [::]:6667
+2025/05/25 17:54:57 IRC server listening on [::]:6667
+2025/05/25 17:55:08 Client connected: 127.0.0.1:40250
+2025/05/25 17:55:21 jasonk joined #foo
+2025/05/25 17:56:22 Client connected: 127.0.0.1:34264
+2025/05/25 17:56:34 jason2 joined #foo
+2025/05/25 18:07:31 Client disconnected: 127.0.0.1:34264
+2025/05/25 18:07:31 jason2 left #foo
+2025/05/25 18:07:33 Client disconnected: 127.0.0.1:40250
+2025/05/25 18:07:33 jasonk left #foo
+2025/05/25 18:07:53 IRC server listening on [::]:6667
+2025/05/25 18:08:03 Client connected: 127.0.0.1:41782
+2025/05/25 18:08:29 jason1 joined #foo
+2025/05/25 18:09:04 Client connected: 127.0.0.1:58982
+2025/05/25 18:09:10 jason2 joined #foo
+2025/05/25 18:09:26 jason2 left #foo
+2025/05/25 18:09:39 jason1 joined #foo2
+2025/05/25 18:09:45 jason2 joined #foo2
+2025/05/25 18:10:04 Client disconnected: 127.0.0.1:41782
+2025/05/25 18:10:04 jason1 left #foo
+2025/05/25 18:10:04 jason1 left #foo2
+2025/05/25 18:10:09 Client disconnected: 127.0.0.1:58982
+2025/05/25 18:10:09 jason2 left #foo2
