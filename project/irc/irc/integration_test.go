@@ -41,11 +41,10 @@ func TestClientFlow(t *testing.T) {
 	c1.Join("#room")
 	c2.Join("#room")
 
-	// read join messages
-	c1.ReadLine()
-	c2.ReadLine()
-	c1.ReadLine()
-	c2.ReadLine()
+       // read join messages: one for c1 and two after c2 joins
+       c1.ReadLine()
+       c2.ReadLine()
+       c1.ReadLine()
 
 	c1.Msg("#room", "hello")
 
