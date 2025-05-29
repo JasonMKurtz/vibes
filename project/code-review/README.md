@@ -4,7 +4,13 @@ This project provides a simple code review tool with a Golang backend and a Reac
 
 ## Backend
 
-The backend API is implemented in Go using Gin and GORM with an SQLite database. The main data model is a `PR` that keeps track of the pull request author, a list of reviewers, and which actor needs to take the next action. The next actor must match either the PR author or one of the reviewers.
+The backend API is implemented in Go using Gin and GORM with an SQLite database. The main data models are:
+
+* `PR` – tracks the pull request author, a list of reviewers and which actor needs to take the next action.
+* `Review` – represents a review of a PR and can hold an overall state such as approval or request for changes.
+* `Comment` – individual comments attached to a PR or review.
+
+The next actor on a PR must match either the PR author or one of the reviewers.
 
 Run the backend with:
 
