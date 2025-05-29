@@ -32,9 +32,11 @@ func main() {
 
 	prHandler := handlers.NewPRHandler(db)
 	commentHandler := handlers.NewCommentHandler(db)
+	router.Static("/ui", "../frontend")
 	router.GET("/prs", prHandler.ListPRs)
 	router.POST("/prs", prHandler.CreatePR)
 	router.PUT("/prs/:id/next", prHandler.UpdateNextActor)
+	router.GET("/prs/:id/diff", prHandler.ShowDiff)
 	router.GET("/prs/:id/comments", commentHandler.ListComments)
 	router.POST("/prs/:id/comments", commentHandler.CreateComment)
 

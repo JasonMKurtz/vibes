@@ -19,6 +19,40 @@ func NewPRHandler(db *gorm.DB) *PRHandler {
 	return &PRHandler{DB: db}
 }
 
+// ShowDiff returns the diff for all files in a PR.
+func (h *PRHandler) ShowDiff(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var pr models.PR
+	if err := h.DB.First(&pr, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "PR not found"})
+		return
+	}
+
+	var files []models.FileDiff
+	if len(pr.Files) > 0 {
+		if err := json.Unmarshal(pr.Files, &files); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid files"})
+			return
+		}
+	}
+
+	type fileResp struct {
+		Filename string          `json:"filename"`
+		Diff     []models.DiffOp `json:"diff"`
+	}
+	var resp []fileResp
+	for _, f := range files {
+		diff := models.DiffLines(f.Before, f.After)
+		resp = append(resp, fileResp{Filename: f.Filename, Diff: diff})
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 func (h *PRHandler) ListPRs(c *gin.Context) {
 	var prs []models.PR
 	if err := h.DB.Find(&prs).Error; err != nil {
