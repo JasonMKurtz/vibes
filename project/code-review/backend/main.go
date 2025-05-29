@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
@@ -11,8 +13,11 @@ import (
 	"code-review/internal/models"
 )
 
-func setupDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("code_review.db"), &gorm.Config{})
+func setupDB(path string) (*gorm.DB, error) {
+	if path == "" {
+		path = "code_review.db"
+	}
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +28,7 @@ func setupDB() (*gorm.DB, error) {
 }
 
 func main() {
-	db, err := setupDB()
+	db, err := setupDB(os.Getenv("DB_PATH"))
 	if err != nil {
 		log.Fatalf("failed to setup db: %v", err)
 	}
@@ -38,7 +43,14 @@ func main() {
 	router.GET("/prs/:id/comments", commentHandler.ListComments)
 	router.POST("/prs/:id/comments", commentHandler.CreateComment)
 
-	if err := router.Run(":8080"); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":8080"
+	} else if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
+
+	if err := router.Run(port); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }

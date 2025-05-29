@@ -19,6 +19,11 @@ cd backend
 go run ./...
 ```
 
+The server can be configured with environment variables:
+
+* `PORT` - HTTP listen address, defaults to `:8080`.
+* `DB_PATH` - SQLite database file path, defaults to `code_review.db`.
+
 Run tests with:
 
 ```bash
