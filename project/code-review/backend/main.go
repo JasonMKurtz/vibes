@@ -32,11 +32,14 @@ func main() {
 
 	prHandler := handlers.NewPRHandler(db)
 	commentHandler := handlers.NewCommentHandler(db)
+	reviewHandler := handlers.NewReviewHandler(db)
 	router.GET("/prs", prHandler.ListPRs)
 	router.POST("/prs", prHandler.CreatePR)
 	router.PUT("/prs/:id/next", prHandler.UpdateNextActor)
 	router.GET("/prs/:id/comments", commentHandler.ListComments)
 	router.POST("/prs/:id/comments", commentHandler.CreateComment)
+	router.GET("/prs/:id/reviews", reviewHandler.ListReviews)
+	router.POST("/prs/:id/reviews", reviewHandler.CreateReview)
 
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("server failed: %v", err)

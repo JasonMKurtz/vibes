@@ -28,3 +28,21 @@ go test ./...
 > **Note**: Dependencies are referenced in `go.mod` but are not vendored. You may need network access to download them.
 
 Frontend is not yet implemented.
+
+### Reviews
+
+Reviews are created and listed under a specific PR using `/prs/:id/reviews`.
+
+Create a review:
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"reviewer":"bob","state":"approved"}' \
+     http://localhost:8080/prs/1/reviews
+```
+
+List reviews for a PR:
+
+```bash
+curl http://localhost:8080/prs/1/reviews
+```
