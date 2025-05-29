@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Code Review</title>
+<style>
+body { font-family: Arial, sans-serif; }
+pre { background: #eee; padding: 10px; }
+.add { color: green; }
+.del { color: red; }
+.equal { color: black; }
+.comment { margin-left: 20px; color: blue; }
+</style>
+</head>
+<body>
+<h1>Pull Requests</h1>
+<ul id="pr-list"></ul>
+<div id="pr-detail"></div>
+<script>
+async function loadPRs(){
+  const res=await fetch('/prs');
+  const prs=await res.json();
+  const ul=document.getElementById('pr-list');
+  ul.innerHTML='';
+  prs.forEach(pr=>{
+    const li=document.createElement('li');
+    const a=document.createElement('a');
+    a.href='#';
+    a.textContent=pr.title;
+    a.onclick=()=>{loadPR(pr.id);return false;};
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+}
+async function loadPR(id){
+  const diffRes=await fetch('/prs/'+id+'/diff');
+  const files=await diffRes.json();
+  const detail=document.getElementById('pr-detail');
+  detail.innerHTML='';
+  files.forEach(f=>{
+    const h=document.createElement('h3');
+    h.textContent=f.filename;
+    detail.appendChild(h);
+    const pre=document.createElement('pre');
+    f.diff.forEach(d=>{
+      const div=document.createElement('div');
+      div.className=d.type;
+      const symbol=d.type==='add'?'+':d.type==='del'?'-':' ';
+      div.textContent=symbol+d.text;
+      div.onclick=()=>addComment(id,f.filename,d.new_line||d.old_line);
+      pre.appendChild(div);
+    });
+    detail.appendChild(pre);
+  });
+  loadComments(id);
+  const form=document.createElement('div');
+  const btn=document.createElement('button');
+  btn.textContent='Add general comment';
+  btn.onclick=()=>addComment(id,'',0);
+  form.appendChild(btn);
+  detail.appendChild(form);
+}
+async function addComment(id,file,line){
+  const body=prompt('Comment');
+  if(!body) return;
+  const payload={author:'anon',body:body};
+  if(file) payload.file=file;
+  if(line) payload.line=line;
+  await fetch('/prs/'+id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  loadComments(id);
+}
+async function loadComments(id){
+  const res=await fetch('/prs/'+id+'/comments');
+  const comments=await res.json();
+  let div=document.getElementById('comment-list');
+  if(!div){
+    div=document.createElement('div');
+    div.id='comment-list';
+    document.getElementById('pr-detail').appendChild(div);
+  }
+  div.innerHTML='<h3>Comments</h3>';
+  comments.forEach(c=>{
+    const p=document.createElement('p');
+    p.className='comment';
+    const where=c.file?c.file+':'+c.line+' ':'';
+    p.textContent=where+c.author+': '+c.body;
+    div.appendChild(p);
+  });
+}
+loadPRs();
+</script>
+</body>
+</html>

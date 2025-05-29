@@ -17,6 +17,8 @@ type Comment struct {
 	gorm.Model
 	PRID     uint
 	ReviewID *uint
+	File     string
+	Line     *int
 	Author   string
 	Body     string
 }

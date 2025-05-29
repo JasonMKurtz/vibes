@@ -27,4 +27,8 @@ go test ./...
 
 > **Note**: Dependencies are referenced in `go.mod` but are not vendored. You may need network access to download them.
 
-Frontend is not yet implemented.
+## Frontend
+
+A very small vanilla JavaScript UI lives in `frontend/index.html`. When the Go
+server runs it serves this under `/ui`. The page lists PRs, shows diffs and lets
+you add general or line comments.
