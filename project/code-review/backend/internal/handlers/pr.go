@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -59,6 +60,27 @@ func (h *PRHandler) UpdateNextActor(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "PR not found"})
 		return
 	}
+
+	var reviewers []string
+	if err := json.Unmarshal(pr.Reviewers, &reviewers); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid reviewers"})
+		return
+	}
+
+	valid := payload.NextActor == pr.Author
+	if !valid {
+		for _, r := range reviewers {
+			if payload.NextActor == r {
+				valid = true
+				break
+			}
+		}
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid next_actor"})
+		return
+	}
+
 	pr.NextActor = payload.NextActor
 	if err := h.DB.Save(&pr).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
